@@ -10,13 +10,13 @@ import logging
 from torch.utils.data import DataLoader, Dataset
 from typing import Tuple, List
 
-# Set up logging
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Set device
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-# Parameters
+
 DATA_URL = 'https://skylion007.github.io/OpenWebTextCorpus/openwebtext.tar.xz'
 DATA_DIR = 'data'
 EXTRACTED_FILE = os.path.join(DATA_DIR, 'openwebtext.txt')
@@ -31,9 +31,9 @@ NUM_EPOCHS = 5
 BATCH_SIZE = 32
 SEQ_LENGTH = 100
 LEARNING_RATE = 0.001
-GRAD_CLIP = 5  # Prevents exploding gradients
+GRAD_CLIP = 5  
 
-# Step 1: Data Extraction
+
 def download_and_extract_data() -> None:
     """Download and extract the dataset."""
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -63,7 +63,7 @@ def download_and_extract_data() -> None:
         logging.error(f"Error during data extraction: {e}")
         raise
 
-# Step 2: Tokenizer Training
+
 def train_tokenizer() -> Tokenizer:
     """Train or load a tokenizer."""
     if os.path.exists(TOKENIZER_FILE):
@@ -89,7 +89,7 @@ def train_tokenizer() -> Tokenizer:
         logging.error(f"Error during tokenizer training: {e}")
         raise
 
-# Step 3: Dataset Preparation
+
 class TextDataset(Dataset):
     """Custom Dataset for text data."""
     def __init__(self, text: str, tokenizer: Tokenizer, seq_length: int = SEQ_LENGTH):
@@ -106,7 +106,7 @@ class TextDataset(Dataset):
         y = self.tokens[idx + 1:idx + self.seq_length + 1]
         return torch.tensor(x, dtype=torch.long), torch.tensor(y, dtype=torch.long)
 
-# Step 4: Model Definition
+
 class LSTMModel(nn.Module):
     """LSTM-based language model."""
     def __init__(self, vocab_size: int = VOCAB_SIZE, embedding_dim: int = EMBEDDING_DIM,
@@ -126,7 +126,7 @@ class LSTMModel(nn.Module):
         return (torch.zeros(NUM_LAYERS, batch_size, HIDDEN_DIM).to(device),
                 torch.zeros(NUM_LAYERS, batch_size, HIDDEN_DIM).to(device))
 
-# Step 5: Training Function
+
 def train_model(model: nn.Module, dataset: Dataset, num_epochs: int = NUM_EPOCHS, batch_size: int = BATCH_SIZE,
                 learning_rate: float = LEARNING_RATE, grad_clip: float = GRAD_CLIP) -> None:
     """Train the model."""
@@ -157,7 +157,7 @@ def train_model(model: nn.Module, dataset: Dataset, num_epochs: int = NUM_EPOCHS
     torch.save(model.state_dict(), MODEL_FILE)
     logging.info("Model saved successfully!")
 
-# Step 6: Load Model
+
 def load_model() -> nn.Module:
     """Load a trained model."""
     model = LSTMModel().to(device)
@@ -167,7 +167,7 @@ def load_model() -> nn.Module:
         logging.info("Model loaded successfully.")
     return model
 
-# Step 7: Text Generation with Temperature Sampling
+
 def generate_text(model: nn.Module, tokenizer: Tokenizer, start_text: str, length: int = 100,
                   temperature: float = 1.0) -> str:
     """Generate text using the trained model."""
@@ -187,26 +187,25 @@ def generate_text(model: nn.Module, tokenizer: Tokenizer, start_text: str, lengt
 
     return tokenizer.decode(generated)
 
-# Main Execution
+
 if __name__ == "__main__":
     try:
-        # Download & Extract Data
+      
         download_and_extract_data()
 
-        # Train Tokenizer
+    
         tokenizer = train_tokenizer()
 
-        # Prepare Dataset
+    
         with open(EXTRACTED_FILE, 'r', encoding='utf-8') as f:
             text = f.read()
         dataset = TextDataset(text, tokenizer)
 
-        # Load or Train Model
         model = load_model()
         if not os.path.exists(MODEL_FILE):
             train_model(model, dataset)
 
-        # Generate Sample Text
+    
         start_text = "Once upon a time"
         generated_text = generate_text(model, tokenizer, start_text, length=100, temperature=0.8)
         print(f"\nGenerated Text:\n{generated_text}")
